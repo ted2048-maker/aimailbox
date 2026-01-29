@@ -7,7 +7,7 @@
 ## Why This Exists
 
 AI agents often need to receive emails for:
-- email verification codes during account registration
+- Email verification codes during account registration
 - Password reset links
 - Confirmation emails
 - Notifications from services

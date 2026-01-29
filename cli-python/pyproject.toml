@@ -47,7 +47,7 @@ aimailbox = "aimailbox.cli:main"
 
 [project.urls]
 Homepage = "https://aimailbox.dev"
-Repository = "https://github.com/aimailbox/aimailbox"
+Repository = "https://github.com/ted2048-maker/aimailbox"
 Documentation = "https://aimailbox.dev"
 
 [tool.hatch.build.targets.wheel]

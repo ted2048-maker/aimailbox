@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIMaibox - Permissionless Email for AI Agents</title>
+  <meta name="description" content="An inbox for your agent, no questions asked. Permissionless email for AI agents.">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --code-bg: #161b22;
+      --border: #30363d;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; margin: 2rem 0 1rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
+    p { margin: 0.75rem 0; color: var(--muted); }
+    .tagline { font-size: 1.25rem; color: var(--text); margin-bottom: 0.25rem; }
+    .subtitle { color: var(--muted); font-style: italic; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      background: var(--code-bg);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 0.9em;
+    }
+    pre {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      border: 1px solid var(--border);
+    }
+    pre code { background: none; padding: 0; }
+    .install-options { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+    .install-option {
+      flex: 1;
+      min-width: 250px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .install-option h3 { margin-top: 0; color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--text); }
+    td { color: var(--muted); }
+    td code { color: var(--text); }
+    .highlight { color: var(--accent); }
+    footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .github-link { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.9rem; }
+    .github-link:hover { color: var(--text); }
+    .github-link svg { width: 20px; height: 20px; fill: currentColor; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>AIMaibox</h1>
+    <a href="https://github.com/ted2048-maker/aimailbox" class="github-link">
+      <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+  <p class="tagline"><strong>An inbox for your agent, no questions asked.</strong></p>
+  <p class="subtitle">Permissionless email for AI agents. No signup, no KYC, no wait.</p>
+
+  <h2>Quick Start</h2>
+
+  <div class="install-options">
+    <div class="install-option">
+      <h3>Node.js</h3>
+      <pre><code>npm install -g aimailbox</code></pre>
+    </div>
+    <div class="install-option">
+      <h3>Python</h3>
+      <pre><code>pip install aimailbox</code></pre>
+    </div>
+  </div>
+
+  <pre><code><span class="highlight"># Create inbox</span>
+aimailbox create
+→ Email: x7k2m@aimailbox.dev
+
+<span class="highlight"># Check messages</span>
+aimailbox list x7k2m
+
+<span class="highlight"># Get verification code</span>
+aimailbox read x7k2m --latest --code-only
+→ 847291</code></pre>
+
+  <h2>Commands</h2>
+
+  <table>
+    <tr><th>Command</th><th>Description</th></tr>
+    <tr><td><code>aimailbox create</code></td><td>Create a new inbox</td></tr>
+    <tr><td><code>aimailbox list &lt;inbox&gt;</code></td><td>List messages</td></tr>
+    <tr><td><code>aimailbox read &lt;inbox&gt; [n]</code></td><td>Read message #n</td></tr>
+    <tr><td><code>aimailbox read &lt;inbox&gt; --latest</code></td><td>Read latest message</td></tr>
+    <tr><td><code>aimailbox read &lt;inbox&gt; --code-only</code></td><td>Extract verification code only</td></tr>
+    <tr><td><code>aimailbox read &lt;inbox&gt; --json</code></td><td>Output as JSON</td></tr>
+    <tr><td><code>aimailbox inboxes</code></td><td>List local inboxes</td></tr>
+    <tr><td><code>aimailbox delete &lt;inbox&gt;</code></td><td>Delete inbox</td></tr>
+  </table>
+
+  <h2>AI Agent Integration</h2>
+
+  <h3>Bash</h3>
+  <pre><code>EMAIL=$(aimailbox create --json | jq -r '.email')
+# Use $EMAIL for registration...
+
+# Poll for verification code
+CODE=$(aimailbox read $EMAIL --latest --code-only)
+echo "Code: $CODE"</code></pre>
+
+  <h3>Python</h3>
+  <pre><code>import subprocess, json
+
+# Create inbox
+result = subprocess.run(["aimailbox", "create", "--json"], capture_output=True, text=True)
+inbox = json.loads(result.stdout)
+print(f"Email: {inbox['email']}")
+
+# Get verification code
+result = subprocess.run(
+    ["aimailbox", "read", inbox['id'], "--latest", "--code-only"],
+    capture_output=True, text=True
+)
+print(f"Code: {result.stdout.strip()}")</code></pre>
+
+  <h3>Node.js</h3>
+  <pre><code>const { execSync } = require('child_process');
+
+// Create inbox
+const inbox = JSON.parse(execSync('aimailbox create --json', { encoding: 'utf-8' }));
+console.log(`Email: ${inbox.email}`);
+
+// Get verification code
+const code = execSync(`aimailbox read ${inbox.id} --latest --code-only`, { encoding: 'utf-8' }).trim();
+console.log(`Code: ${code}`);</code></pre>
+
+  <h2>How It Works</h2>
+  <p>1. <strong>Create inbox</strong> → Get random email address + auth token</p>
+  <p>2. <strong>Receive email</strong> → Emails to <code>*@aimailbox.dev</code> are stored</p>
+  <p>3. <strong>Read messages</strong> → Verification codes are auto-extracted</p>
+  <p>4. <strong>Secure access</strong> → Only token holder can read messages</p>
+
+  <h2>Security</h2>
+  <table>
+    <tr><td>Authentication</td><td>256-bit random token, SHA-256 hashed on server</td></tr>
+    <tr><td>No registration</td><td>Inbox IDs are random, unlinkable to identity</td></tr>
+    <tr><td>Receive-only</td><td>Cannot send emails (prevents spam abuse)</td></tr>
+    <tr><td>Auto-expiration</td><td>Messages deleted after 7 days</td></tr>
+  </table>
+
+  <h2>Links</h2>
+  <p>
+    <a href="https://github.com/ted2048-maker/aimailbox">GitHub</a> ·
+    <a href="https://www.npmjs.com/package/aimailbox">npm</a> ·
+    <a href="https://pypi.org/project/aimailbox/">PyPI</a>
+  </p>
+
+  <footer>
+    <p>MIT License · Built for AI agents</p>
+  </footer>
+</body>
+</html>

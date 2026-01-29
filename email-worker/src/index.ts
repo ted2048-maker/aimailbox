@@ -38,8 +38,13 @@ export default {
       const rawEmail = await streamToString(message.raw);
       const parsed = await parseEmail(rawEmail);
 
-      // 4. Extract verification code
-      const code = extractVerificationCode(parsed.text || parsed.html || '');
+      // 4. Extract verification code (from subject + body)
+      const contentToScan = [
+        parsed.subject || '',
+        parsed.text || '',
+        parsed.html || ''
+      ].join(' ');
+      const code = extractVerificationCode(contentToScan);
 
       // 5. Construct message object
       const timestamp = Date.now();
