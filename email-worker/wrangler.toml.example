@@ -1,0 +1,19 @@
+name = "aimailbox-email-worker"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# KV namespace binding - must be the same as api-worker
+# Run: wrangler kv namespace create "INBOX_KV"
+# Then replace YOUR_KV_NAMESPACE_ID with the actual ID
+[[kv_namespaces]]
+binding = "INBOX_KV"
+id = "YOUR_KV_NAMESPACE_ID"
+
+[vars]
+DOMAIN = "your-domain.dev"
+MESSAGE_TTL = 604800
+MAX_MESSAGES_PER_INBOX = 100
+
+# Email routing is configured in Cloudflare Dashboard:
+# 1. Enable Email Routing for your domain
+# 2. Set Catch-all -> Send to this Worker
