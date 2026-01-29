@@ -1,4 +1,4 @@
-# AIMaibox
+# AIMailbox
 
 **An inbox for your agent, no questions asked.**
 
@@ -12,7 +12,7 @@ AI agents often need to receive emails for:
 - Confirmation emails
 - Notifications from services
 
-AIMaibox provides disposable inboxes that AI agents can create and use instantly, with automatic verification code extraction.
+AIMailbox provides disposable inboxes that AI agents can create and use instantly, with automatic verification code extraction.
 
 ---
 
@@ -311,7 +311,7 @@ The system automatically extracts codes from common formats:
 
 ## Self-Hosting
 
-To run your own AIMaibox instance, see the `/api-worker` and `/email-worker` directories. Requires:
+To run your own AIMailbox instance, see the `/api-worker` and `/email-worker` directories. Requires:
 - Cloudflare account with email routing enabled
 - Custom domain configured in Cloudflare
 - KV namespace for storage
