@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIMailbox Web</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #111111;
+      --border: #222222;
+      --text: #e5e5e5;
+      --muted: #737373;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #22c55e;
+      --code-bg: #1a1a1a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    /* Email Display */
+    .email-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .email-address {
+      font-size: 1.25rem;
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      word-break: break-all;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      background: var(--code-bg);
+      border-radius: 6px;
+      display: inline-block;
+      transition: opacity 0.2s;
+    }
+
+    .email-address:hover {
+      opacity: 0.8;
+    }
+
+    .email-address:active {
+      opacity: 0.6;
+    }
+
+    .copy-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+
+    .copy-hint.copied {
+      color: var(--success);
+    }
+
+    /* Buttons */
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .btn-secondary:hover {
+      background: var(--card);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: #dc2626;
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Messages */
+    .messages-section {
+      margin-top: 1.5rem;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: 0.875rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .refresh-info {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .message-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .message-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .message-item:hover {
+      border-color: #333;
+    }
+
+    .message-header {
+      padding: 1rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .message-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .message-from {
+      font-size: 0.875rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .message-subject {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0.25rem;
+    }
+
+    .message-meta {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .message-time {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .message-code {
+      font-size: 0.75rem;
+      color: var(--success);
+      font-weight: 500;
+      margin-top: 0.25rem;
+    }
+
+    .message-body {
+      display: none;
+      padding: 0 1rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .message-item.expanded .message-body {
+      display: block;
+      padding-top: 1rem;
+    }
+
+    .message-content {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .message-code-display {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .code-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .code-value {
+      font-size: 1.5rem;
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--success);
+      letter-spacing: 0.1em;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Welcome State */
+    .welcome {
+      text-align: center;
+      padding: 4rem 1rem;
+    }
+
+    .welcome p {
+      color: var(--muted);
+      margin-bottom: 2rem;
+      font-size: 0.9375rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    footer a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+    }
+
+    footer a:hover {
+      color: var(--text);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .email-section {
+        padding: 1.5rem 1rem;
+      }
+
+      .email-address {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AIMailbox</h1>
+      <p class="tagline">Disposable inbox for verification codes</p>
+    </header>
+
+    <!-- Welcome State (no inbox) -->
+    <div id="welcome" class="welcome">
+      <p>Create a temporary email inbox.<br>No signup required.</p>
+      <button class="btn" onclick="createInbox()">Create Inbox</button>
+    </div>
+
+    <!-- Inbox State -->
+    <div id="inbox-view" style="display: none;">
+      <div class="email-section">
+        <div class="email-address" id="email-display" onclick="copyEmail()" title="Click to copy"></div>
+        <div class="copy-hint" id="copy-hint">Click to copy</div>
+        <div class="btn-group" style="margin-top: 1.5rem;">
+          <button class="btn btn-secondary" onclick="refreshMessages()">Refresh</button>
+          <button class="btn btn-secondary btn-danger" onclick="deleteInbox()">Delete</button>
+        </div>
+      </div>
+
+      <div class="messages-section">
+        <div class="section-header">
+          <span class="section-title">Messages</span>
+          <span class="refresh-info" id="refresh-info">Auto-refresh: 30s</span>
+        </div>
+        <div id="message-list" class="message-list">
+          <div class="loading"><span class="spinner"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <a href="https://github.com/ted2048-maker/aimailbox" target="_blank">GitHub</a>
+      &nbsp;·&nbsp;
+      <a href="https://aimailbox.dev" target="_blank">Documentation</a>
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/aimailbox-sdk@1.0.0/dist/browser/index.global.js"></script>
+  <script>
+    // Initialize SDK
+    const client = new AIMailbox.AIMailbox();
+
+    // State
+    let currentInbox = null;
+    let refreshInterval = null;
+    let lastRefresh = null;
+
+    // LocalStorage keys
+    const STORAGE_KEY = 'aimailbox_inbox';
+
+    // ==========================================
+    // Persistence (LocalStorage, not Cookie)
+    // ==========================================
+
+    function saveInbox(inbox) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        id: inbox.id,
+        email: inbox.email,
+        token: inbox.token,
+        createdAt: inbox.createdAt
+      }));
+    }
+
+    function loadInbox() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (data) {
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+      return null;
+    }
+
+    function clearInbox() {
+      localStorage.removeItem(STORAGE_KEY);
+      currentInbox = null;
+    }
+
+    // ==========================================
+    // UI Updates
+    // ==========================================
+
+    function showWelcome() {
+      document.getElementById('welcome').style.display = 'block';
+      document.getElementById('inbox-view').style.display = 'none';
+      stopAutoRefresh();
+    }
+
+    function showInbox() {
+      document.getElementById('welcome').style.display = 'none';
+      document.getElementById('inbox-view').style.display = 'block';
+      document.getElementById('email-display').textContent = currentInbox.email;
+      startAutoRefresh();
+      refreshMessages();
+    }
+
+    function renderMessages(messages) {
+      const container = document.getElementById('message-list');
+
+      if (messages.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>No messages yet</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = messages.map((msg, index) => `
+        <div class="message-item" data-id="${msg.id}">
+          <div class="message-header" onclick="toggleMessage(this)">
+            <div class="message-info">
+              <div class="message-from">${escapeHtml(msg.from)}</div>
+              <div class="message-subject">${escapeHtml(msg.subject)}</div>
+            </div>
+            <div class="message-meta">
+              <div class="message-time">${formatTime(msg.timestamp)}</div>
+              ${msg.hasCode ? '<div class="message-code">CODE</div>' : ''}
+            </div>
+          </div>
+          <div class="message-body">
+            <div class="loading"><span class="spinner"></span></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+
+      return date.toLocaleDateString();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==========================================
+    // Actions
+    // ==========================================
+
+    async function createInbox() {
+      try {
+        const btn = document.querySelector('#welcome .btn');
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+
+        currentInbox = await client.createInbox();
+        saveInbox(currentInbox);
+        showInbox();
+      } catch (e) {
+        alert('Failed to create inbox: ' + e.message);
+      } finally {
+        const btn = document.querySelector('#welcome .btn');
+        btn.disabled = false;
+        btn.textContent = 'Create Inbox';
+      }
+    }
+
+    async function refreshMessages() {
+      if (!currentInbox) return;
+
+      lastRefresh = new Date();
+      updateRefreshInfo();
+
+      try {
+        const result = await client.listMessages(currentInbox.id, currentInbox.token);
+        renderMessages(result.messages);
+      } catch (e) {
+        if (e.message.includes('not found') || e.message.includes('404')) {
+          // Inbox was deleted on server
+          clearInbox();
+          showWelcome();
+          alert('This inbox has expired or been deleted.');
+        } else {
+          console.error('Refresh error:', e);
+        }
+      }
+    }
+
+    async function toggleMessage(header) {
+      const item = header.closest('.message-item');
+      const body = item.querySelector('.message-body');
+      const msgId = item.dataset.id;
+
+      if (item.classList.contains('expanded')) {
+        item.classList.remove('expanded');
+        return;
+      }
+
+      // Close others
+      document.querySelectorAll('.message-item.expanded').forEach(el => {
+        el.classList.remove('expanded');
+      });
+
+      item.classList.add('expanded');
+
+      // Load message content
+      try {
+        const msg = await client.readMessage(currentInbox.id, msgId, currentInbox.token);
+
+        let html = '';
+
+        if (msg.code) {
+          html += `
+            <div class="message-code-display">
+              <div class="code-label">Verification Code</div>
+              <div class="code-value">${escapeHtml(msg.code.code)}</div>
+            </div>
+          `;
+        }
+
+        html += `<div class="message-content">${escapeHtml(msg.text || '(No text content)')}</div>`;
+
+        body.innerHTML = html;
+      } catch (e) {
+        body.innerHTML = `<div class="message-content" style="color: #ef4444;">Failed to load message</div>`;
+      }
+    }
+
+    async function deleteInbox() {
+      if (!confirm('Delete this inbox? This cannot be undone.')) return;
+
+      try {
+        await client.deleteInbox(currentInbox.id, currentInbox.token);
+      } catch (e) {
+        // Ignore errors - inbox might already be deleted
+      }
+
+      clearInbox();
+      showWelcome();
+    }
+
+    function copyEmail() {
+      if (!currentInbox) return;
+
+      navigator.clipboard.writeText(currentInbox.email).then(() => {
+        const hint = document.getElementById('copy-hint');
+        hint.textContent = 'Copied!';
+        hint.classList.add('copied');
+
+        setTimeout(() => {
+          hint.textContent = 'Click to copy';
+          hint.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // ==========================================
+    // Auto Refresh
+    // ==========================================
+
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      refreshInterval = setInterval(refreshMessages, 30000);
+      updateRefreshInfo();
+    }
+
+    function stopAutoRefresh() {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+      }
+    }
+
+    function updateRefreshInfo() {
+      const el = document.getElementById('refresh-info');
+      if (lastRefresh) {
+        const seconds = Math.floor((new Date() - lastRefresh) / 1000);
+        el.textContent = seconds < 5 ? 'Just updated' : `Updated ${seconds}s ago`;
+      }
+    }
+
+    // Update "last refreshed" every second
+    setInterval(updateRefreshInfo, 1000);
+
+    // ==========================================
+    // Initialize
+    // ==========================================
+
+    function init() {
+      currentInbox = loadInbox();
+
+      if (currentInbox) {
+        showInbox();
+      } else {
+        showWelcome();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
