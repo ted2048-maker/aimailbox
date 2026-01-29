@@ -83,7 +83,8 @@ def main():
 
 
 @main.command()
-def create():
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def create(as_json: bool):
     """Create a new inbox.
 
     Creates a temporary inbox that can receive emails. Returns an email address
@@ -94,6 +95,14 @@ def create():
 
         # Store token locally
         store_token(result["id"], result["token"])
+
+        if as_json:
+            click.echo(json.dumps({
+                "id": result["id"],
+                "email": result["email"],
+                "token": result["token"],
+            }, indent=2))
+            return
 
         console.print()
         console.print("[green]✓ Inbox created successfully![/green]")

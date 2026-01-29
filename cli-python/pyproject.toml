@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aimailbox"
-version = "1.0.0"
+version = "1.0.1"
 description = "Permissionless inbox for AI agents. Receive emails without registration."
 readme = "README.md"
 license = "MIT"
