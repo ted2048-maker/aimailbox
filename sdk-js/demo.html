@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIMailbox SDK Demo</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --success: #3fb950;
+      --code-bg: #161b22;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 { margin-bottom: 1rem; }
+    h2 { margin: 1.5rem 0 0.5rem; color: var(--accent); }
+    button {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin: 0.5rem 0.5rem 0.5rem 0;
+    }
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .output {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      font-family: monospace;
+      white-space: pre-wrap;
+      min-height: 100px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .info { color: var(--muted); }
+    .success { color: var(--success); }
+    .error { color: #f85149; }
+    #email-display {
+      font-size: 1.5rem;
+      color: var(--accent);
+      padding: 1rem;
+      background: var(--code-bg);
+      border-radius: 8px;
+      margin: 1rem 0;
+      text-align: center;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>AIMailbox SDK Demo</h1>
+  <p class="info">Browser-based demonstration of the AIMailbox JavaScript SDK.</p>
+
+  <h2>1. Create Inbox</h2>
+  <button id="btn-create">Create New Inbox</button>
+  <div id="email-display" class="hidden"></div>
+
+  <h2>2. Check Messages</h2>
+  <button id="btn-list" disabled>List Messages</button>
+  <button id="btn-latest" disabled>Read Latest</button>
+
+  <h2>3. Wait for Code</h2>
+  <button id="btn-wait" disabled>Wait for Verification Code (30s)</button>
+  <button id="btn-stop" disabled>Stop Waiting</button>
+
+  <h2>4. Cleanup</h2>
+  <button id="btn-delete" disabled>Delete Inbox</button>
+
+  <h2>Output</h2>
+  <div id="output" class="output">Ready. Click "Create New Inbox" to start.</div>
+
+  <script src="./dist/browser/index.global.js"></script>
+  <script>
+    const client = new AIMailbox.AIMailbox();
+    let currentInbox = null;
+    let waitAborted = false;
+
+    const output = document.getElementById('output');
+    const emailDisplay = document.getElementById('email-display');
+
+    function log(msg, type = '') {
+      const line = document.createElement('div');
+      line.className = type;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function clearOutput() {
+      output.innerHTML = '';
+    }
+
+    function updateButtons() {
+      const hasInbox = currentInbox !== null;
+      document.getElementById('btn-list').disabled = !hasInbox;
+      document.getElementById('btn-latest').disabled = !hasInbox;
+      document.getElementById('btn-wait').disabled = !hasInbox;
+      document.getElementById('btn-delete').disabled = !hasInbox;
+    }
+
+    // Create Inbox
+    document.getElementById('btn-create').addEventListener('click', async () => {
+      clearOutput();
+      log('Creating inbox...');
+
+      try {
+        currentInbox = await client.createInbox();
+        log(`Inbox created!`, 'success');
+        log(`ID: ${currentInbox.id}`);
+        log(`Email: ${currentInbox.email}`);
+        log(`Token: ${currentInbox.token.substring(0, 20)}...`);
+
+        emailDisplay.textContent = currentInbox.email;
+        emailDisplay.classList.remove('hidden');
+
+        updateButtons();
+      } catch (e) {
+        log(`Error: ${e.message}`, 'error');
+      }
+    });
+
+    // List Messages
+    document.getElementById('btn-list').addEventListener('click', async () => {
+      log('Listing messages...');
+
+      try {
+        const result = await client.listMessages(currentInbox.id, currentInbox.token);
+        log(`Found ${result.messages.length} message(s)`, 'success');
+
+        for (const msg of result.messages) {
+          log(`  - [${msg.hasCode ? 'CODE' : '----'}] ${msg.from}: ${msg.subject}`);
+        }
+
+        if (result.messages.length === 0) {
+          log('  (no messages yet)', 'info');
+        }
+      } catch (e) {
+        log(`Error: ${e.message}`, 'error');
+      }
+    });
+
+    // Read Latest
+    document.getElementById('btn-latest').addEventListener('click', async () => {
+      log('Reading latest message...');
+
+      try {
+        const msg = await client.readLatestMessage(currentInbox.id, currentInbox.token);
+
+        if (msg) {
+          log(`From: ${msg.from}`, 'success');
+          log(`Subject: ${msg.subject}`);
+          log(`Code: ${msg.code?.code || '(none)'}`);
+          log(`---`);
+          log(msg.text || '(no text content)');
+        } else {
+          log('No messages in inbox', 'info');
+        }
+      } catch (e) {
+        log(`Error: ${e.message}`, 'error');
+      }
+    });
+
+    // Wait for Code
+    document.getElementById('btn-wait').addEventListener('click', async () => {
+      waitAborted = false;
+      document.getElementById('btn-wait').disabled = true;
+      document.getElementById('btn-stop').disabled = false;
+
+      log('Waiting for verification code (30s timeout)...');
+
+      try {
+        const code = await client.waitForCode(currentInbox.id, currentInbox.token, {
+          timeout: 30000,
+          interval: 3000,
+          onPoll: (attempt) => {
+            if (waitAborted) throw new Error('Aborted');
+            log(`  Polling attempt ${attempt}...`, 'info');
+          }
+        });
+
+        if (code) {
+          log(`Verification code found: ${code}`, 'success');
+        } else {
+          log('Timeout: No verification code received', 'info');
+        }
+      } catch (e) {
+        if (e.message === 'Aborted') {
+          log('Stopped by user', 'info');
+        } else {
+          log(`Error: ${e.message}`, 'error');
+        }
+      }
+
+      document.getElementById('btn-wait').disabled = false;
+      document.getElementById('btn-stop').disabled = true;
+    });
+
+    // Stop Waiting
+    document.getElementById('btn-stop').addEventListener('click', () => {
+      waitAborted = true;
+    });
+
+    // Delete Inbox
+    document.getElementById('btn-delete').addEventListener('click', async () => {
+      log('Deleting inbox...');
+
+      try {
+        await client.deleteInbox(currentInbox.id, currentInbox.token);
+        log(`Inbox ${currentInbox.id} deleted`, 'success');
+
+        currentInbox = null;
+        emailDisplay.classList.add('hidden');
+        updateButtons();
+      } catch (e) {
+        log(`Error: ${e.message}`, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

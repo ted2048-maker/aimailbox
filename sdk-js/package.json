@@ -1,0 +1,49 @@
+{
+  "name": "aimailbox-sdk",
+  "version": "1.0.0",
+  "description": "JavaScript SDK for AIMailbox - Permissionless email inbox for AI agents",
+  "keywords": [
+    "email",
+    "inbox",
+    "ai",
+    "agent",
+    "verification",
+    "sdk",
+    "temporary-email",
+    "disposable-email"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ted2048-maker/aimailbox"
+  },
+  "homepage": "https://aimailbox.dev",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "build:browser": "tsup src/index.ts --format iife --global-name AIMailbox --minify --out-dir dist/browser",
+    "build:all": "npm run build && npm run build:browser",
+    "prepublishOnly": "npm run build:all"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browser": "./dist/browser/index.global.js"
+}
