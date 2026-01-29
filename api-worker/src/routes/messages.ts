@@ -1,15 +1,15 @@
 import { jsonResponse, errorResponse } from '../utils/response';
 import { verifyToken, extractToken } from '../utils/token';
-import { KEYS } from '../types';
-import type { Env, InboxMeta, MessageSummary, MessageData } from '../types';
+import * as db from '../db';
+import type { Env, InboxMeta } from '../types';
 
-// Helper to verify token and get inbox meta (duplicated to avoid circular imports)
+// Helper to verify token and get inbox meta
 async function authenticateInbox(
   request: Request,
   env: Env,
   inboxId: string
 ): Promise<{ meta: InboxMeta } | { error: Response }> {
-  const meta = (await env.INBOX_KV.get(KEYS.inboxMeta(inboxId), 'json')) as InboxMeta | null;
+  const meta = await db.getInbox(env.DB, inboxId);
 
   if (!meta) {
     return { error: errorResponse('Inbox not found', 404) };
@@ -37,27 +37,20 @@ export const handleMessageRoutes = {
     }
 
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '20', 10);
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 100);
     const offset = parseInt(url.searchParams.get('offset') || '0', 10);
 
-    const messageList =
-      ((await env.INBOX_KV.get(KEYS.messageList(inboxId), 'json')) as MessageSummary[]) || [];
-
-    const paginatedList = messageList.slice(offset, offset + limit);
+    const { messages, total } = await db.listMessages(env.DB, inboxId, limit, offset);
 
     return jsonResponse({
       success: true,
       data: {
-        messages: paginatedList.map((msg, index) => ({
-          ...msg,
-          index: offset + index + 1,
-          receivedAt: new Date(msg.timestamp).toISOString(),
-        })),
+        messages,
         pagination: {
-          total: messageList.length,
+          total,
           limit,
           offset,
-          hasMore: offset + limit < messageList.length,
+          hasMore: offset + limit < total,
         },
       },
     });
@@ -70,13 +63,12 @@ export const handleMessageRoutes = {
       return auth.error;
     }
 
-    const message = (await env.INBOX_KV.get(KEYS.message(inboxId, msgId), 'json')) as MessageData | null;
+    const message = await db.getMessage(env.DB, inboxId, msgId);
 
     if (!message) {
       return errorResponse('Message not found', 404);
     }
 
-    // Return structured message content (without HTML)
     return jsonResponse({
       success: true,
       data: {

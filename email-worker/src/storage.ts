@@ -13,115 +13,61 @@ export interface MessageData {
   receivedAt: string;
 }
 
-export interface InboxMeta {
-  id: string;
-  createdAt: string;
-  messageCount: number;
-  lastMessageAt: string | null;
-  tokenHash?: string; // Optional for backwards compatibility
+/**
+ * Check if an inbox exists in the database
+ */
+export async function inboxExists(
+  db: D1Database,
+  inboxId: string
+): Promise<boolean> {
+  const result = await db.prepare(`
+    SELECT 1 FROM inboxes WHERE id = ? LIMIT 1
+  `).bind(inboxId).first();
+
+  return result !== null;
 }
 
-export interface MessageSummary {
-  id: string;
-  from: string;
-  subject: string;
-  timestamp: number;
-  hasCode: boolean;
-}
-
-// KV Key formats
-export const KEYS = {
-  inboxMeta: (inboxId: string) => `inbox:${inboxId}:meta`,
-  message: (inboxId: string, msgId: string) => `inbox:${inboxId}:msg:${msgId}`,
-  messageList: (inboxId: string) => `inbox:${inboxId}:messages`,
-};
-
+/**
+ * Store a message in the database and update inbox metadata
+ */
 export async function storeMessage(
-  kv: KVNamespace,
+  db: D1Database,
   inboxId: string,
-  message: MessageData,
-  ttl: number
+  message: MessageData
 ): Promise<void> {
-  // Store individual message
-  await kv.put(KEYS.message(inboxId, message.id), JSON.stringify(message), {
-    expirationTtl: ttl,
-  });
+  // Use a batch to ensure atomicity
+  const statements = [
+    // Insert message
+    db.prepare(`
+      INSERT INTO messages (
+        id, inbox_id, from_addr, from_name, to_addr, subject,
+        text_content, html_content, code_value, code_type, code_confidence,
+        timestamp, received_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      message.id,
+      inboxId,
+      message.from,
+      message.fromName,
+      message.to,
+      message.subject,
+      message.text,
+      message.html,
+      message.code?.code ?? null,
+      message.code?.type ?? null,
+      message.code?.confidence ?? null,
+      message.timestamp,
+      message.receivedAt
+    ),
 
-  // Update message list (store message ID and summary)
-  const listKey = KEYS.messageList(inboxId);
-  const existingList = ((await kv.get(listKey, 'json')) as MessageSummary[] | null) || [];
+    // Update inbox message count and last_message_at
+    db.prepare(`
+      UPDATE inboxes
+      SET message_count = message_count + 1,
+          last_message_at = ?
+      WHERE id = ?
+    `).bind(message.receivedAt, inboxId),
+  ];
 
-  existingList.unshift({
-    id: message.id,
-    from: message.from,
-    subject: message.subject,
-    timestamp: message.timestamp,
-    hasCode: message.code !== null,
-  });
-
-  // Keep only recent messages
-  const trimmedList = existingList.slice(0, 100);
-
-  await kv.put(listKey, JSON.stringify(trimmedList), { expirationTtl: ttl });
-}
-
-export async function getInboxMeta(kv: KVNamespace, inboxId: string): Promise<InboxMeta | null> {
-  const meta = (await kv.get(KEYS.inboxMeta(inboxId), 'json')) as InboxMeta | null;
-  return meta;
-}
-
-export async function createInboxMeta(kv: KVNamespace, inboxId: string): Promise<InboxMeta> {
-  const meta: InboxMeta = {
-    id: inboxId,
-    createdAt: new Date().toISOString(),
-    messageCount: 0,
-    lastMessageAt: null,
-  };
-  await kv.put(KEYS.inboxMeta(inboxId), JSON.stringify(meta));
-  return meta;
-}
-
-export async function incrementMessageCount(kv: KVNamespace, inboxId: string): Promise<void> {
-  let meta = await getInboxMeta(kv, inboxId);
-
-  if (!meta) {
-    meta = await createInboxMeta(kv, inboxId);
-  }
-
-  meta.messageCount += 1;
-  meta.lastMessageAt = new Date().toISOString();
-
-  await kv.put(KEYS.inboxMeta(inboxId), JSON.stringify(meta));
-}
-
-export async function getMessageList(kv: KVNamespace, inboxId: string): Promise<MessageSummary[]> {
-  const listKey = KEYS.messageList(inboxId);
-  const list = (await kv.get(listKey, 'json')) as MessageSummary[] | null;
-
-  return list || [];
-}
-
-export async function getMessage(
-  kv: KVNamespace,
-  inboxId: string,
-  msgId: string
-): Promise<MessageData | null> {
-  const message = (await kv.get(KEYS.message(inboxId, msgId), 'json')) as MessageData | null;
-  return message;
-}
-
-export async function deleteInbox(kv: KVNamespace, inboxId: string): Promise<void> {
-  // Get message list
-  const messages = await getMessageList(kv, inboxId);
-
-  // Delete all messages
-  for (const msg of messages) {
-    await kv.delete(KEYS.message(inboxId, msg.id));
-  }
-
-  // Delete message list
-  await kv.delete(KEYS.messageList(inboxId));
-
-  // Delete metadata
-  await kv.delete(KEYS.inboxMeta(inboxId));
+  await db.batch(statements);
 }

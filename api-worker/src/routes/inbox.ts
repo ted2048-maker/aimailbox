@@ -1,8 +1,8 @@
 import { generateUniqueInboxId } from '../utils/id';
 import { generateToken, hashToken, verifyToken, extractToken } from '../utils/token';
 import { jsonResponse, errorResponse } from '../utils/response';
-import { KEYS } from '../types';
-import type { Env, InboxMeta, MessageSummary } from '../types';
+import * as db from '../db';
+import type { Env, InboxMeta } from '../types';
 
 // Helper to verify token and get inbox meta
 async function authenticateInbox(
@@ -10,7 +10,7 @@ async function authenticateInbox(
   env: Env,
   inboxId: string
 ): Promise<{ meta: InboxMeta } | { error: Response }> {
-  const meta = (await env.INBOX_KV.get(KEYS.inboxMeta(inboxId), 'json')) as InboxMeta | null;
+  const meta = await db.getInbox(env.DB, inboxId);
 
   if (!meta) {
     return { error: errorResponse('Inbox not found', 404) };
@@ -34,25 +34,16 @@ export const handleInboxRoutes = {
   async create(request: Request, env: Env): Promise<Response> {
     // Generate unique ID with automatic length expansion
     const inboxId = await generateUniqueInboxId(
-      env.INBOX_KV,
+      env.DB,
       async (id: string) => {
-        const existing = await env.INBOX_KV.get(KEYS.inboxMeta(id));
-        return existing !== null;
+        return await db.inboxExists(env.DB, id);
       }
     );
 
     const token = generateToken();
     const tokenHash = await hashToken(token);
 
-    const meta: InboxMeta = {
-      id: inboxId,
-      createdAt: new Date().toISOString(),
-      messageCount: 0,
-      lastMessageAt: null,
-      tokenHash: tokenHash,
-    };
-
-    await env.INBOX_KV.put(KEYS.inboxMeta(inboxId), JSON.stringify(meta));
+    const meta = await db.createInbox(env.DB, inboxId, tokenHash);
 
     return jsonResponse(
       {
@@ -95,17 +86,7 @@ export const handleInboxRoutes = {
       return auth.error;
     }
 
-    // Get message list and delete all messages
-    const messageList =
-      ((await env.INBOX_KV.get(KEYS.messageList(inboxId), 'json')) as MessageSummary[]) || [];
-
-    for (const msg of messageList) {
-      await env.INBOX_KV.delete(KEYS.message(inboxId, msg.id));
-    }
-
-    // Delete message list and metadata
-    await env.INBOX_KV.delete(KEYS.messageList(inboxId));
-    await env.INBOX_KV.delete(KEYS.inboxMeta(inboxId));
+    await db.deleteInbox(env.DB, inboxId);
 
     return jsonResponse({
       success: true,

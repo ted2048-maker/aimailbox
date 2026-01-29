@@ -19,11 +19,11 @@ export function generateRandomId(length: number): string {
 }
 
 /**
- * Generate a unique inbox ID that doesn't exist in KV
+ * Generate a unique inbox ID that doesn't exist in database
  * Starts with MIN_LENGTH, automatically expands if too many collisions
  */
 export async function generateUniqueInboxId(
-  kv: KVNamespace,
+  db: D1Database,
   checkExists: (id: string) => Promise<boolean>
 ): Promise<string> {
   let length = MIN_LENGTH;

@@ -1,13 +1,11 @@
 import { parseEmail } from './parser';
 import { extractVerificationCode } from './extractor';
-import { storeMessage, incrementMessageCount } from './storage';
+import { storeMessage, inboxExists } from './storage';
 import type { MessageData } from './storage';
 
 export interface Env {
-  INBOX_KV: KVNamespace;
+  DB: D1Database;
   DOMAIN: string;
-  MESSAGE_TTL: number;
-  MAX_MESSAGES_PER_INBOX: number;
 }
 
 interface EmailMessage {
@@ -29,16 +27,22 @@ export default {
 
       // 2. Validate inbox_id format
       if (!isValidInboxId(inboxId)) {
-        // Invalid inbox_id, discard email
-        console.log(`Invalid inbox ID: ${inboxId}`);
+        console.log(`Invalid inbox ID format: ${inboxId}`);
         return;
       }
 
-      // 3. Parse email content
+      // 3. Check if inbox exists in database
+      const exists = await inboxExists(env.DB, inboxId);
+      if (!exists) {
+        console.log(`Inbox not found, discarding email: ${inboxId}`);
+        return;
+      }
+
+      // 4. Parse email content
       const rawEmail = await streamToString(message.raw);
       const parsed = await parseEmail(rawEmail);
 
-      // 4. Extract verification code (from subject + body)
+      // 5. Extract verification code (from subject + body)
       const contentToScan = [
         parsed.subject || '',
         parsed.text || '',
@@ -46,7 +50,7 @@ export default {
       ].join(' ');
       const code = extractVerificationCode(contentToScan);
 
-      // 5. Construct message object
+      // 6. Construct message object
       const timestamp = Date.now();
       const messageData: MessageData = {
         id: timestamp.toString(),
@@ -61,11 +65,8 @@ export default {
         receivedAt: new Date(timestamp).toISOString(),
       };
 
-      // 6. Store to KV
-      await storeMessage(env.INBOX_KV, inboxId, messageData, env.MESSAGE_TTL);
-
-      // 7. Update inbox metadata
-      await incrementMessageCount(env.INBOX_KV, inboxId);
+      // 7. Store to D1
+      await storeMessage(env.DB, inboxId, messageData);
 
       console.log(`Email stored for inbox ${inboxId}: ${parsed.subject}`);
     } catch (error) {
