@@ -7,13 +7,19 @@ import { parseInboxId } from '../utils/inbox.js';
 export const listCommand = new Command('list')
   .description('List messages in an inbox')
   .argument('<inbox>', 'Inbox ID')
-  .option('-l, --limit <number>', 'Number of messages to show', '20')
+  .option('-l, --limit <number>', 'Number of messages to show (1-1000)', '20')
   .option('-t, --token <token>', 'Authentication token (uses stored token if not provided)')
   .option('--json', 'Output as JSON')
   .action(async (inboxInput: string, options: { limit: string; token?: string; json?: boolean }) => {
     try {
       const inbox = parseInboxId(inboxInput);
       const limit = parseInt(options.limit, 10);
+
+      if (isNaN(limit) || limit < 1 || limit > 1000) {
+        console.error(chalk.red('Invalid limit. Must be a number between 1 and 1000.'));
+        process.exit(1);
+      }
+
       const result = await api.listMessages(inbox, limit, 0, options.token);
 
       if (options.json) {

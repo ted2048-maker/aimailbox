@@ -1,6 +1,6 @@
 {
   "name": "aimailbox",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Permissionless inbox for AI agents",
   "keywords": [
     "email",
@@ -14,7 +14,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/ted2048-maker/aimailbox"
   },
   "bin": {
     "aimailbox": "./dist/index.js"

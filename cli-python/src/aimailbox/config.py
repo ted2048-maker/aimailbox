@@ -80,8 +80,26 @@ def list_stored_inboxes() -> list[dict[str, str]]:
 
 
 def parse_inbox_id(input_str: str) -> str:
-    """Extract inbox ID from either 'tuft9u' or 'tuft9u@aimailbox.dev'."""
+    """Extract inbox ID from either 'tuft9u' or 'tuft9u@aimailbox.dev'.
+
+    Raises ValueError if the input is empty or uses wrong domain.
+    """
     trimmed = input_str.strip().lower()
+
+    if not trimmed:
+        raise ValueError("Inbox ID cannot be empty")
+
     if '@' in trimmed:
-        return trimmed.split('@')[0]
+        parts = trimmed.split('@')
+        inbox_id = parts[0]
+        domain = parts[1] if len(parts) > 1 else ""
+
+        if not inbox_id:
+            raise ValueError("Inbox ID cannot be empty")
+
+        if domain and domain != "aimailbox.dev":
+            raise ValueError(f"Invalid domain '{domain}'. Only @aimailbox.dev is supported")
+
+        return inbox_id
+
     return trimmed

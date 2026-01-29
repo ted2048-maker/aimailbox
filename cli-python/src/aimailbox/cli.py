@@ -155,7 +155,7 @@ def inboxes(as_json: bool):
 
 @main.command("list")
 @click.argument("inbox_input")
-@click.option("-l", "--limit", default=20, help="Number of messages to show")
+@click.option("-l", "--limit", default=20, type=click.IntRange(min=1, max=1000), help="Number of messages to show (1-1000)")
 @click.option("-t", "--token", default=None, help="Authentication token")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 def list_messages(inbox_input: str, limit: int, token: Optional[str], as_json: bool):
@@ -167,6 +167,11 @@ def list_messages(inbox_input: str, limit: int, token: Optional[str], as_json: b
     """
     try:
         inbox = parse_inbox_id(inbox_input)
+    except ValueError as e:
+        error_console.print(f"[red]Invalid inbox:[/red] {e}")
+        sys.exit(1)
+
+    try:
         result = api.list_messages(inbox, limit=limit, token=token)
 
         if as_json:
@@ -215,25 +220,46 @@ def list_messages(inbox_input: str, limit: int, token: Optional[str], as_json: b
 
 @main.command()
 @click.argument("inbox_input")
-@click.argument("index", default=1, type=int)
+@click.argument("index", default=None, type=int, required=False)
 @click.option("--latest", is_flag=True, help="Read the latest message")
 @click.option("-t", "--token", default=None, help="Authentication token")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 @click.option("--code-only", is_flag=True, help="Only output the verification code")
-def read(inbox_input: str, index: int, latest: bool, token: Optional[str], as_json: bool, code_only: bool):
+def read(inbox_input: str, index: Optional[int], latest: bool, token: Optional[str], as_json: bool, code_only: bool):
     """Read a specific message.
 
     INBOX can be either the ID (e.g., 'tuft9u') or full email (e.g., 'tuft9u@aimailbox.dev').
     INDEX is 1-based (first message is 1, not 0). Use --code-only to extract
     just the verification code, useful for automation and AI agents.
     """
+    # Validate inbox input
     try:
         inbox = parse_inbox_id(inbox_input)
+    except ValueError as e:
+        error_console.print(f"[red]Invalid inbox:[/red] {e}")
+        sys.exit(1)
+
+    # Validate index and --latest usage
+    if latest and index is not None:
+        error_console.print("[red]Cannot use both INDEX and --latest. Choose one.[/red]")
+        sys.exit(1)
+
+    if not latest and index is None:
+        index = 1  # Default to first message
+
+    if index is not None and index < 1:
+        error_console.print("[red]Invalid message index. INDEX must be >= 1.[/red]")
+        sys.exit(1)
+
+    try:
         # Get message list to find msgId
         list_result = api.list_messages(inbox, limit=100, token=token)
         messages = list_result.get("messages", [])
 
         if not messages:
+            if code_only:
+                # For --code-only, no messages means no code, exit with error for scripts
+                sys.exit(1)
             console.print("[yellow]No messages in this inbox.[/yellow]")
             sys.exit(0)
 
@@ -242,7 +268,7 @@ def read(inbox_input: str, index: int, latest: bool, token: Optional[str], as_js
             target_msg = messages[0]
         else:
             msg_index = index - 1
-            if msg_index < 0 or msg_index >= len(messages):
+            if msg_index >= len(messages):
                 error_console.print(f"[red]Invalid message index. Valid range: 1-{len(messages)}[/red]")
                 sys.exit(1)
             target_msg = messages[msg_index]
@@ -311,7 +337,11 @@ def delete(inbox_input: str, force: bool, token: Optional[str]):
     """
     try:
         inbox = parse_inbox_id(inbox_input)
+    except ValueError as e:
+        error_console.print(f"[red]Invalid inbox:[/red] {e}")
+        sys.exit(1)
 
+    try:
         # Confirm deletion
         if not force:
             if not click.confirm(f"Are you sure you want to delete inbox {inbox}? This cannot be undone"):
