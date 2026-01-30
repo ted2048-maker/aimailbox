@@ -1,6 +1,6 @@
 {
   "name": "aimailbox-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "JavaScript SDK for AIMailbox - Permissionless email inbox for AI agents",
   "keywords": [
     "email",
