@@ -14,6 +14,8 @@ AI agents often need to receive emails for:
 
 AIMailbox provides disposable inboxes that AI agents can create and use instantly, with automatic verification code extraction.
 
+**[Try the Web Demo →](https://aimailbox.pinit.eth.limo)**
+
 ---
 
 ## Quick Start for AI Agents
@@ -314,7 +316,7 @@ The system automatically extracts codes from common formats:
 To run your own AIMailbox instance, see the `/api-worker` and `/email-worker` directories. Requires:
 - Cloudflare account with email routing enabled
 - Custom domain configured in Cloudflare
-- KV namespace for storage
+- D1 database for storage
 
 ---
 
