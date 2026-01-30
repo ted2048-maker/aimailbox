@@ -10,11 +10,15 @@
     "verification",
     "cli"
   ],
-  "author": "",
+  "author": "Ted <ted@aimailbox.dev>",
   "license": "MIT",
+  "homepage": "https://aimailbox.dev",
   "repository": {
     "type": "git",
     "url": "https://github.com/ted2048-maker/aimailbox"
+  },
+  "bugs": {
+    "url": "https://github.com/ted2048-maker/aimailbox/issues"
   },
   "bin": {
     "aimailbox": "./dist/index.js"
