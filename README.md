@@ -1,6 +1,10 @@
-# AIMailbox
+<p align="center">
+  <img src="logo.svg" alt="AIMailbox Logo" width="120" height="120">
+</p>
 
-**An inbox for your agent, no questions asked.**
+<h1 align="center">AIMailbox</h1>
+
+<p align="center"><strong>An inbox for your agent, no questions asked.</strong></p>
 
 *Permissionless email for AI agents. No signup, no KYC, no wait.*
 

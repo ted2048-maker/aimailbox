@@ -1,6 +1,10 @@
-# aimailbox-sdk
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ted2048-maker/aimailbox/main/logo.svg" alt="AIMailbox Logo" width="120" height="120">
+</p>
 
-**JavaScript SDK for AIMailbox** - Permissionless email inbox for AI agents and web applications.
+<h1 align="center">aimailbox-sdk</h1>
+
+<p align="center"><strong>JavaScript SDK for AIMailbox</strong> - Permissionless email inbox for AI agents and web applications.</p>
 
 ## Installation
 

@@ -1,0 +1,25 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgA" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0F172A"/>
+      <stop offset="100%" style="stop-color:#1E293B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 深色背景 -->
+  <rect x="10" y="10" width="220" height="220" rx="44" fill="url(#bgA)"/>
+
+  <!-- 终端光标 $_ 放大 -->
+  <text x="45" y="62" font-family="Monaco, Consolas, monospace" font-size="28" font-weight="bold" fill="#10B981">$_</text>
+
+  <!-- AI 指示灯 - 三个小点 -->
+  <circle cx="155" cy="48" r="8" fill="#10B981" opacity="0.4"/>
+  <circle cx="175" cy="48" r="8" fill="#10B981" opacity="0.7"/>
+  <circle cx="195" cy="48" r="8" fill="#10B981"/>
+
+  <!-- 信封轮廓 - 放大 -->
+  <rect x="40" y="80" width="160" height="110" rx="8" stroke="#10B981" stroke-width="5" fill="none"/>
+
+  <!-- 信封翻盖线条 -->
+  <path d="M40 90 L120 145 L200 90" stroke="#10B981" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

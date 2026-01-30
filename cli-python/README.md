@@ -1,6 +1,10 @@
-# aimailbox
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ted2048-maker/aimailbox/main/logo.svg" alt="AIMailbox Logo" width="120" height="120">
+</p>
 
-**An inbox for your agent, no questions asked.**
+<h1 align="center">aimailbox</h1>
+
+<p align="center"><strong>An inbox for your agent, no questions asked.</strong></p>
 
 *Permissionless email for AI agents. No signup, no KYC, no wait.*
 
