@@ -14,7 +14,7 @@ AI agents often need to receive emails for:
 
 AIMailbox provides disposable inboxes that AI agents can create and use instantly, with automatic verification code extraction.
 
-**[Try the Web Demo →](https://aimailbox.pinit.eth.limo)**
+**<a href="https://aimailbox.pinit.eth.limo" target="_blank">Try the Web Demo →</a>**
 
 ---
 
